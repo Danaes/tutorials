@@ -1,0 +1,14 @@
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: my-last-function
+spec:
+  broker: example-broker
+  filter:
+    attributes:
+      type: lastEvent
+  subscriber:
+    ref:
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      name: funqy-knative-events-codestart
