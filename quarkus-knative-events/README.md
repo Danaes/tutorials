@@ -212,7 +212,7 @@ corresponden (a parte del curler) que serán los recientemente creados para pode
 ![post-execution.png](src/main/resources/post-execution.png)
 
 Si al cabo de un periodo de tiempo (esto es configurable a través de Kubernetes) las funciones no reciben ningún evento,
-se ejecutará automática un proceso de desescalado.
+se ejecutará automáticamente un proceso de desescalado.
 
 # 5. Conclusiones
 Hemos aprendido como implementar funciones serverless con Quarkus. Además, se ha enseñado como usar 
@@ -221,7 +221,7 @@ nuestras propias funciones para cumplir con las necesidades de negocio y poder d
 
 Con lo rápido que se despligan las aplicaciones y lo optimizado que está Quarkus para Kubernetes, puede resultar una
 interesante opción a tener en cuenta según las necesidades que tenga el negocio. Además, se pueden llevar estrategías
-para ahorrar costes en los entornos productivos. A veces, tenemos máquinas levantadas todo constantemente cuando el tráfico
+para ahorrar costes en los entornos productivos. A veces, tenemos máquinas levantadas constantemente cuando el tráfico
 a estas es bastante bajo o esporádico. De esta manera, se puede atender a la demanda de los usuarios fácilmente y reduciendo
 los costes de infraestructura.
 
