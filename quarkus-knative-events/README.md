@@ -58,9 +58,9 @@ tener todas las funciones en una misma clase, es solo para simplificar el tutori
 ```java
 public class CloudEventGreeting {
   @Funq
-  @CloudEventMapping(trigger = "com.example.order.created", responseSource = "https://example.com/createOrder", responseType = "com.example.order.items.blocked")
-  public String createOrder(String input, @Context CloudEvent cloudEvent) {
-    Log.info("** createOrder **");
+  @CloudEventMapping(trigger = "com.example.order.created", responseSource = "https://example.com/createOrder", responseType = "com.example.order.items.blocked") ①
+  public String createOrder(String input, @Context CloudEvent cloudEvent ②) {
+    Log.info("** createOrder **"); ③
     return input + " - " + cloudEvent.type();
   }
 
@@ -79,26 +79,26 @@ public class CloudEventGreeting {
   }
 }
 ```
-+ ① Clase para tener trazabilidad de lo que ocurre en las aplicaciones
-+ ② CloudEventMapping es una anotocación que nos permite mappear el trigger con el se lanza la función. Si la función
-devuelve algo es recomendable poner quien es el emisor de dicha salida y a qué tipo lo quiere mappear. Esto es útil en 
-el caso de que queramos concatenar funciones. Esta configuración también se puede hacer por medio de properties de la
-siguiente  manera. 
++ ① CloudEventMapping es una anotocación que nos permite mappear el trigger con el se lanza la función. Si la función
+  devuelve algo es recomendable poner quien es el emisor de dicha salida y a qué tipo lo quiere mappear. Esto es útil en 
+  el caso de que queramos concatenar funciones. Esta configuración también se puede hacer por medio de properties de la
+  siguiente  manera. 
   ```
   quarkus.funqy.knative-events.mapping.{function name}.trigger=com.example.order.created
   quarkus.funqy.knative-events.mapping.{function name}.response-type=com.example.order.items.blocked
   quarkus.funqy.knative-events.mapping.{function name}.response-source=https://example.com/createOrder
   ```
-+ ③ Este segundo parámetro, `CloudEvent`, es opcional. Mi recomendación es siempre añadirlo para tener más información
-sobre el evento, ya que nos ayudará a tener mayor trazabilidad de este e incluso tomar mejores decisiones técnicas.
++ ② Este segundo parámetro, `CloudEvent`, es opcional. Mi recomendación es siempre añadirlo para tener más información
+  sobre el evento, ya que nos ayudará a tener mayor trazabilidad de este e incluso tomar mejores decisiones técnicas.
   ```java
   public interface CloudEvent {
-    String id();
-    String specVersion();
-    String source();
-    String subject();
-    OffsetDateTime time();
+  String id();
+  String specVersion();
+  String source();
+  String subject();
+  OffsetDateTime time();
   }
++ ③ Clase para tener trazabilidad de lo que ocurre en las aplicaciones
   ```
   > **¡Importante!** Como se ha dicho en la descripción, los Cloud Events son un estándar y debemos respetar esto.
 Os comparto la [documentación oficial](https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#required-attributes)
