@@ -57,28 +57,26 @@ tener todas las funciones en una misma clase, es solo para simplificar el tutori
 
 ```java
 public class CloudEventGreeting {
-    private static final Logger log = Logger.getLogger(CloudEventGreeting.class); ①
+  @Funq
+  @CloudEventMapping(trigger = "com.example.order.created", responseSource = "https://example.com/createOrder", responseType = "com.example.order.items.blocked")
+  public String createOrder(String input, @Context CloudEvent cloudEvent) {
+    Log.info("** createOrder **");
+    return input + " - " + cloudEvent.type();
+  }
 
-    @Funq
-    @CloudEventMapping(trigger = "firstEvent", responseSource = "myFirstFunction", responseType = "secondEvent") ②
-    public String myFirstFunction(String input, @Context CloudEvent cloudEvent ③) {
-        log.info("** myFirstFunction **");
-        return input + " - " + cloudEvent.type();
-    }
+  @Funq
+  @CloudEventMapping(trigger = "com.example.order.items.blocked", responseSource = "https://example.com/blockItems", responseType = "com.example.order.payed")
+  public String blockItems(String input, @Context CloudEvent cloudEvent) {
+    Log.info("** blockItems **");
+    return input + " - " + cloudEvent.type();
+  }
 
-    @Funq
-    @CloudEventMapping(trigger = "secondEvent", responseSource = "mySecondFunction", responseType = "lastEvent")
-    public String mySecondFunction(String input, @Context CloudEvent cloudEvent) {
-        log.info("** mySecondFunction **");
-        return input + " - " + cloudEvent.type();
-    }
-
-    @Funq
-    @CloudEventMapping(trigger = "lastEvent")
-    public void myLastFunction(String input, @Context CloudEvent cloudEvent) {
-        log.info("** myLastFunction **");
-        log.info(input + " - " + cloudEvent.type());
-    }
+  @Funq
+  @CloudEventMapping(trigger = "com.example.order.payed")
+  public void payOrder(String input, @Context CloudEvent cloudEvent) {
+    Log.info("** payOrder **");
+    Log.infof("%s - %s", input, cloudEvent.type());
+  }
 }
 ```
 + ① Clase para tener trazabilidad de lo que ocurre en las aplicaciones
@@ -87,9 +85,9 @@ devuelve algo es recomendable poner quien es el emisor de dicha salida y a qué 
 el caso de que queramos concatenar funciones. Esta configuración también se puede hacer por medio de properties de la
 siguiente  manera. 
   ```
-  quarkus.funqy.knative-events.mapping.{function name}.trigger=firstEvent
-  quarkus.funqy.knative-events.mapping.{function name}.response-type=secondEvent
-  quarkus.funqy.knative-events.mapping.{function name}.response-source=myFirstFunction
+  quarkus.funqy.knative-events.mapping.{function name}.trigger=com.example.order.created
+  quarkus.funqy.knative-events.mapping.{function name}.response-type=com.example.order.items.blocked
+  quarkus.funqy.knative-events.mapping.{function name}.response-source=https://example.com/createOrder
   ```
 + ③ Este segundo parámetro, `CloudEvent`, es opcional. Mi recomendación es siempre añadirlo para tener más información
 sobre el evento, ya que nos ayudará a tener mayor trazabilidad de este e incluso tomar mejores decisiones técnicas.
@@ -139,17 +137,17 @@ spec:
 Despues vamos a crear los triggers que serán las funciones que se levantarán cuando llegue el evento al que están 
 suscritas.
 ```yaml
-# firstEvent-trigger.yaml
+# create-order-trigger.yaml
 
 apiVersion: eventing.knative.dev/v1
 kind: Trigger
 metadata:
-  name: my-first-function
+  name: create-order
 spec:
   broker: broker-name
   filter:
     attributes:
-      type: firstEvent
+      type: com.example.order.created
   subscriber:
     ref:
       apiVersion: serving.knative.dev/v1
@@ -161,9 +159,9 @@ Una vez tengamos los ficheros creados, podemos ejecutar el siguiente comando par
 cluser.
 ```shell
 kubectl apply -n default -f src/main/k8s/funqy-service.yaml
-kubectl apply -n default -f src/main/k8s/firstEvent-trigger.yaml
-kubectl apply -n default -f src/main/k8s/secondEvent-trigger.yaml
-kubectl apply -n default -f src/main/k8s/lasEvent-trigger.yaml
+kubectl apply -n default -f src/main/k8s/create-order-trigger.yaml
+kubectl apply -n default -f src/main/k8s/block-items-trigger.yaml
+kubectl apply -n default -f src/main/k8s/pay-order-trigger.yaml
 ```
 
 # 4. Demo
@@ -196,13 +194,25 @@ curl.
 
 Una vez ejecutado el último comando, estaremos dentro del cluster. Ahora haremos un curl como el siguiente
 ```shell
-curl -v --url http://broker-ingress.knative-eventing.svc.cluster.local/default/example-broker -H 'Ce-Id: 1234' -H 'Ce-Source: curler' -H 'Ce-Specversion: 1.0' -H 'Ce-Type: firstEvent' -H 'Ce-time: 2023-09-30T21:44:50.52Z' -H 'Content-Type: application/json' --data '"Daniel"' -X POST
+curl -v --url http://broker-ingress.knative-eventing.svc.cluster.local/default/example-broker -H 'Ce-Id: 1234' -H 'Ce-Source: curler' -H 'Ce-Specversion: 1.0' -H 'Ce-Type: com.example.order.created' -H 'Ce-time: 2023-09-30T21:44:50.52Z' -H 'Content-Type: application/json' --data '"myOrder"' -X POST
 ```
 
-Ahora en la ventana donde tenemos `stern` corriendo podremos ver la salida de las funciones y como se han ido llamando
-unas a otras.
+En esta imagen de abajo tengo las ventanas preparadas. Arriba a la izquierda tengo el comando `stern`ejecutándose para
+analizar los logs del cluster. Abajo a la izquierda, se puede ver que solo hay un pod corriendo que será desde donde 
+se lanza la petición (imaginate que es un microservicio que va a publicar el evento al broker). Y a la derecha, estoy
+dentro del pod para ejecutar el `curl`.
 
-![img_3.png](src/main/resources/carbon.png)
+![pre-execution.png](src/main/resources/pre-execution.png)
+
+
+Ejecutamos el `curl` y veremos lo siguiente. Arriba izquierda se verá como se crea un pod que contendrá la aplicación y
+escribirá los logs según vayan los eventos ejecutando funciones. Y abajo a la izquierda, veremos como hay más pods que
+corresponden (a parte del curler) que serán los recientemente creados para poder atender las peticiones del broker.
+
+![post-execution.png](src/main/resources/post-execution.png)
+
+Si al cabo de un periodo de tiempo (esto es configurable a través de Kubernetes) las funciones no reciben ningún evento,
+se ejecutará automática un proceso de desescalado.
 
 # 5. Conclusiones
 Hemos aprendido como implementar funciones serverless con Quarkus. Además, se ha enseñado como usar 
@@ -210,7 +220,10 @@ Cloud Events para integrarse correctamente con otros sistemas de eventos. Y por 
 nuestras propias funciones para cumplir con las necesidades de negocio y poder desplegarlas en Knative. 
 
 Con lo rápido que se despligan las aplicaciones y lo optimizado que está Quarkus para Kubernetes, puede resultar una
-interesante opción a tener en cuenta según las necesidades que tenga el negocio. 
+interesante opción a tener en cuenta según las necesidades que tenga el negocio. Además, se pueden llevar estrategías
+para ahorrar costes en los entornos productivos. A veces, tenemos máquinas levantadas todo constantemente cuando el tráfico
+a estas es bastante bajo o esporádico. De esta manera, se puede atender a la demanda de los usuarios fácilmente y reduciendo
+los costes de infraestructura.
 
 # 6. Referencias
 + https://quarkus.io/guides/

@@ -1,12 +1,12 @@
 apiVersion: eventing.knative.dev/v1
 kind: Trigger
 metadata:
-  name: my-last-function
+  name: create-order
 spec:
   broker: example-broker
   filter:
     attributes:
-      type: lastEvent
+      type: com.example.order.created
   subscriber:
     ref:
       apiVersion: serving.knative.dev/v1

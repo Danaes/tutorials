@@ -1,12 +1,12 @@
 apiVersion: eventing.knative.dev/v1
 kind: Trigger
 metadata:
-  name: my-second-function
+  name: block-items
 spec:
   broker: example-broker
   filter:
     attributes:
-      type: secondEvent
+      type: com.example.order.items.blocked
   subscriber:
     ref:
       apiVersion: serving.knative.dev/v1

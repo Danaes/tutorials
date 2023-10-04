@@ -19,8 +19,8 @@ public class FunqyTest {
         RestAssured.given().contentType("application/json")
                 .header("ce-specversion", "1.0")
                 .header("ce-id", UUID.randomUUID().toString())
-                .header("ce-type", "firstEvent")
-                .header("ce-source", "test")
+                .header("ce-type", "com.example.order.created")
+                .header("ce-source", "curl")
                 .body("\"Bill\"")
                 .post("/")
                 .then().statusCode(200);

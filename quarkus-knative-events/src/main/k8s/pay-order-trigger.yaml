@@ -1,12 +1,12 @@
 apiVersion: eventing.knative.dev/v1
 kind: Trigger
 metadata:
-  name: my-first-function
+  name: pay-order
 spec:
   broker: example-broker
   filter:
     attributes:
-      type: firstEvent
+      type: com.example.order.payed
   subscriber:
     ref:
       apiVersion: serving.knative.dev/v1

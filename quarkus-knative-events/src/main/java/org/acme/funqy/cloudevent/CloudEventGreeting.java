@@ -4,30 +4,29 @@ import io.quarkus.funqy.Context;
 import io.quarkus.funqy.Funq;
 import io.quarkus.funqy.knative.events.CloudEvent;
 import io.quarkus.funqy.knative.events.CloudEventMapping;
+import io.quarkus.logging.Log;
 
 import org.jboss.logging.Logger;
 
 public class CloudEventGreeting {
-    private static final Logger log = Logger.getLogger(CloudEventGreeting.class);
-
     @Funq
-    @CloudEventMapping(trigger = "firstEvent", responseSource = "myFirstFunction", responseType = "secondEvent")
-    public String myFirstFunction(String input, @Context CloudEvent cloudEvent) {
-        log.info("** myFirstFunction **");
+    @CloudEventMapping(trigger = "com.example.order.created", responseSource = "https://example.com/createOrder", responseType = "com.example.order.items.blocked")
+    public String createOrder(String input, @Context CloudEvent cloudEvent) {
+        Log.info("** createOrder **");
         return input + " - " + cloudEvent.type();
     }
 
     @Funq
-    @CloudEventMapping(trigger = "secondEvent", responseSource = "mySecondFunction", responseType = "lastEvent")
-    public String mySecondFunction(String input, @Context CloudEvent cloudEvent) {
-        log.info("** mySecondFunction **");
+    @CloudEventMapping(trigger = "com.example.order.items.blocked", responseSource = "https://example.com/blockItems", responseType = "com.example.order.payed")
+    public String blockItems(String input, @Context CloudEvent cloudEvent) {
+        Log.info("** blockItems **");
         return input + " - " + cloudEvent.type();
     }
 
     @Funq
-    @CloudEventMapping(trigger = "lastEvent")
-    public void myLastFunction(String input, @Context CloudEvent cloudEvent) {
-        log.info("** myLastFunction **");
-        log.info(input + " - " + cloudEvent.type());
+    @CloudEventMapping(trigger = "com.example.order.payed")
+    public void payOrder(String input, @Context CloudEvent cloudEvent) {
+        Log.info("** payOrder **");
+        Log.infof("%s - %s", input, cloudEvent.type());
     }
 }
