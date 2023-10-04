@@ -98,11 +98,12 @@ public class CloudEventGreeting {
   String subject();
   OffsetDateTime time();
   }
-+ ③ Clase para tener trazabilidad de lo que ocurre en las aplicaciones
   ```
   > **¡Importante!** Como se ha dicho en la descripción, los Cloud Events son un estándar y debemos respetar esto.
-Os comparto la [documentación oficial](https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#required-attributes)
-para que podáis ver como se estructura un Cloud Event. 
+  Os comparto la [documentación oficial](https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#required-attributes)
+  para que podáis ver como se estructura un Cloud Event.
+
++ ③ Clase para tener trazabilidad de lo que ocurre en las aplicaciones
 
 Así de simple es desarrollar una función en Quarkus con Funqy. Antes de comenzar con la parte de Knative, generamos una
 imagen Docker de nuestro proyecto y lo subimos al registry. 
